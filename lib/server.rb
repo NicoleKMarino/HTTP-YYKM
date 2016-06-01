@@ -47,7 +47,7 @@ class Server
       response = "Total Requests:#{@server_count}"
       @continue = false
     else
-      response == "<pre>" +
+      response = "<pre>" +
       "Verb: #{request[0]}
       Path: #{request[1]}
       Protocol: #{request[2]}
@@ -55,9 +55,7 @@ class Server
       Port: #{port}
       Origin:#{ip}
       Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" + "</prev"
-      binding.pry
     end
-    binding.pry
     response_puts(response)
   end
 
