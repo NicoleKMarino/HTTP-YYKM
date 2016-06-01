@@ -1,5 +1,6 @@
 require 'socket'
 require 'pry'
+
 class Server
   def initialize
     @server_count = 0
@@ -38,13 +39,15 @@ class Server
     if request[1] == "/hello"
       response = "Hello word (#{@server_count})"
     elsif request[1] == "/datetime"
-      response = "#{Time.now.strftime('%a, %e %b %Y %H:%M:%S %z')}"
+      response = "#{Time.now.strftime('%a,%e %b %Y %H:%M:%S')}"
+    elsif request[1].include?("/word_search") == true
+      word = request[1].partition('=').last
+      response = word_search(word)
     elsif request[1] == "/shutdown"
-      @continue = false
       response = "Total Requests:#{@server_count}"
-      # @client = @tcp_server.close
+      @continue = false
     else
-      "<pre>" +
+      response == "<pre>" +
       "Verb: #{request[0]}
       Path: #{request[1]}
       Protocol: #{request[2]}
@@ -52,10 +55,20 @@ class Server
       Port: #{port}
       Origin:#{ip}
       Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" + "</prev"
+      binding.pry
     end
+    binding.pry
     response_puts(response)
   end
 
+  def word_search(word)
+    lines = File.readlines('/usr/share/dict/words').grep(/#{word}/)
+    if lines.empty? == true
+      return "The word is unknown"
+    else
+      return "That word is known"
+    end
+  end
 
   def response_puts(response)
     output = "<html><head></head><body>#{response}</body></html>"
