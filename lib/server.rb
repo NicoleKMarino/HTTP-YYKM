@@ -1,5 +1,3 @@
-require 'socket'
-require 'pry'
 require_relative "parser"
 
 class Server
