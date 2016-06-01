@@ -10,7 +10,6 @@ class Server
   end
 
   def request
-    @request_total += 1
     client = @tcp_server.accept
     request_lines = []
     while line = client.gets and !line.chomp.empty?
@@ -21,18 +20,7 @@ class Server
 
   def send_response(client, request_lines)
     request = request_lines[0].split(" ")
-    if request[1] == "/hello"
-      response = "Hello word (#{@server_count})".concat("\n\n\n\n#{response_details(request)}")
-    elsif request[1] == "/datetime"
-      response = "#{Time.now.strftime('%a,%e %b %Y %H:%M:%S')}".concat("\n\n\n\n#{response_details(request)}")
-    elsif request[1].include?("/word_search") == true
-      word = request[1].partition('=').last
-      response = word_search(word).concat("\n\n\n\n#{response_details(request)}")
-    elsif request[1] == "/shutdown"
-      response = "Total Requests:#{@server_count}".concat("\n\n\n\n#{response_details(request)}")
-    else
-      response = response_details(request)
-    end
+    response = check_request_path(client, request)
     client.puts html_headers(response)
     client.puts html_body_message(response)
     client.close
@@ -40,10 +28,10 @@ class Server
 
   def word_search(word)
     lines = File.readlines('/usr/share/dict/words').grep(/#{word}/)
-    if lines.empty? == true
-      return "The word is unknown"
+    if lines.empty?
+      return "WORD is not a known word"
     else
-      return "That word is known"
+      return "WORD is a known word"
     end
   end
 
@@ -59,7 +47,24 @@ class Server
       "content-length: #{html_body_message(message).length}\r\n\r\n"].join("\r\n")
   end
 
-  def response_details(request)
+  def check_request_path(client, request)
+    @request_total += 1
+    if request[1] == "/hello"
+      response = "Hello, World! (#{@request_total})"
+    elsif request[1] == "/datetime"
+      response = "#{Time.now.strftime('%a,%e %b %Y %H:%M:%S')}"
+    elsif request[1].include?("/word_search") == true
+      word = request[1].partition('=').last
+      response = word_search(word)
+    elsif request[1] == "/shutdown"
+      shutdown(client, request)
+    else
+      response = ""
+    end
+    return response + print_request_details(request)
+  end
+
+  def print_request_details(request)
     ip = Socket.ip_address_list[1].ip_address
     host = Socket.gethostname
     port = @tcp_server.addr[1]
@@ -73,6 +78,13 @@ class Server
     Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" + "</prev"
   end
 
+  def shutdown(client, request)
+    response = "Total Requests:#{@request_total}"
+    client.puts html_headers(response + print_request_details(request))
+    client.puts html_body_message(response + print_request_details(request))
+    client.close
+    @tcp_server.close
+  end
 
 end
 
