@@ -33,6 +33,7 @@ class Responder
   end
 
   def check_request_path(server, client, request, active_game)
+    binding.pry
     @request_total += 1
     if request[1] == "/hello"
       response = "Hello, World! (#{@request_total})"
@@ -44,7 +45,10 @@ class Responder
       ############
     elsif request[1].include?("start_game")
       response = "Good luck!"
-    elsif request[1].include?("game")
+    elsif request[1].include?("game") && request[0] == "GET"
+      response =  "#{@gameplay.guess_count} guesses have been taken " +
+                  "\nThe last guess was #{@gameplay.most_recent_guess}, #{@gameplay.most_recent_guess_result}"
+    elsif request[1].include?("game") && request[0] == "POST"
       @gameplay.find_guess(client, @request_lines)
       response = @gameplay.most_recent_guess_result
     elsif request[1] == "/shutdown"
