@@ -1,3 +1,5 @@
+require "pry"
+
 class Game
 
   attr_reader :random_number,
@@ -18,7 +20,7 @@ class Game
     random_number = rand(1..99)
   end
 
-  def play(guess = gets.chomp.to_i)
+  def play(guess)
     @game_active = true
     @guess_count += 1
     @most_recent_guess = guess
@@ -27,14 +29,14 @@ class Game
 
   def compare_guess(guess, answer)
     if guess > answer
-      "too high"
+      return "too high"
     elsif guess < answer
-      "too low"
+      return "too low"
     elsif guess == answer
-      "correct"
+      return "correct, Thanks for playing!"
       end_game("Thanks for playing")
     else
-      puts "invalid"
+      return "invalid"
     end
   end
 
@@ -42,6 +44,14 @@ class Game
     @game_active = false
     puts message
     exit
+  end
+
+  def find_guess(client, request_lines)
+   length = request_lines[3].partition(' ').last.to_i
+   body = client.read(length)
+   number_broken = body.gsub(/[^0-9a-z ]/i,'').partition('game').last
+   guess = number_broken.scan(/\d+/)[0]
+   play(guess.to_i)
   end
 
 end

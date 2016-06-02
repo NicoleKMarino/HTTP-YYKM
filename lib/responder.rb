@@ -5,14 +5,16 @@ require "pry"
 
 class Responder
 
-  def initialize(server, client, request_lines, request_total)
+  def initialize(server, client, request_lines, request_total, active_game)
+    @request_lines = request_lines
+    @gameplay = active_game
     @request_total = request_total
-    send_response(server, client, request_lines)
+    send_response(server, client, request_lines, @gameplay)
   end
 
-  def send_response(server, client, request_lines)
+  def send_response(server, client, request_lines, active_game)
     request = request_lines[0].split(" ")
-    response = check_request_path(server, client, request)
+    response = check_request_path(server, client, request, @gameplay)
     client.puts html_headers(response)
     client.puts html_body_message(response)
     client.close
@@ -30,7 +32,7 @@ class Responder
       "content-length: #{html_body_message(message).length}\r\n\r\n"].join("\r\n")
   end
 
-  def check_request_path(server, client, request)
+  def check_request_path(server, client, request, active_game)
     @request_total += 1
     if request[1] == "/hello"
       response = "Hello, World! (#{@request_total})"
@@ -39,6 +41,12 @@ class Responder
     elsif request[1].include?("/word_search")
       word = request[1].partition('=').last
       response = WordSearch.new.word_search(word)
+      ############
+    elsif request[1].include?("start_game")
+      response = "Good luck!"
+    elsif request[1].include?("game")
+      @gameplay.find_guess(client, @request_lines)
+      response = @gameplay.most_recent_guess_result
     elsif request[1] == "/shutdown"
       shutdown(server, client, request)
     else
