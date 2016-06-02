@@ -36,7 +36,7 @@ class Responder
       response = "#{Time.now.strftime('%a,%e %b %Y %H:%M:%S')}"
     elsif request[1].include?("/word_search")
       word = request[1].partition('=').last
-      response = WordSearch.new(word).word_search
+      response = WordSearch.new.word_search(word)
     elsif request[1] == "/shutdown"
       shutdown(server, client, request)
     else

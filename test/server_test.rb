@@ -38,17 +38,17 @@ class ServerTest < Minitest::Test
 
   def test_request_path_word_search
     response = Faraday.get("http://localhost:9292/word_search")
-    assert response.body.include? "WORD"
+    assert response.body.include? "word"
   end
 
   def test_request_path_word_search_true_negative
     response = Faraday.get("http://localhost:9292/word_search=supercalifragilisticexpialidocious")
-    assert response.body.include? "WORD is not a known word"
+    assert response.body.include? " is not a known word"
   end
 
   def test_request_path_word_search_true_positive
     response = Faraday.get("http://localhost:9292/word_search=tennis")
-    assert response.body.include? "WORD is a known word"
+    assert response.body.include? " is a known word"
   end
 
 end

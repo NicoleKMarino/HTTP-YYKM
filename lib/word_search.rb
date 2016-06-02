@@ -1,15 +1,11 @@
 class WordSearch
 
-  def initialize(word)
-    @word = word
-  end
-
-  def word_search(word = @word)
+  def word_search(word)
     lines = File.readlines('/usr/share/dict/words').grep(/#{word}/)
     if lines.empty?
-      return "WORD is not a known word"
+      return "#{word} is not a known word"
     else
-      return "WORD is a known word"
+      return "#{word} is a known word"
     end
   end
 
