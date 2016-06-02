@@ -9,6 +9,7 @@ class Responder
     @request_lines = request_lines
     @gameplay = active_game
     @request_total = request_total
+    @status = "200 ok"
     send_response(server, client, request_lines, @gameplay)
   end
 
@@ -25,7 +26,7 @@ class Responder
   end
 
   def html_headers(message)
-    headers = ["http/1.1 200 ok",
+    headers = ["http/1.1 #{@status}",
       "date: #{Time.now.strftime('%a, %e %b %Y %H:%M:%S %z')}",
       "server: ruby",
       "content-type: text/html; charset=iso-8859-1",
@@ -49,7 +50,10 @@ class Responder
       response = @gameplay.most_recent_guess_result
     elsif request[1] == "/shutdown"
       shutdown(server, client, request)
+    elsif request[1] == "/"
+      response = ""
     else
+      @status = "404 not found"
       response = ""
     end
     return response + print_request_details(server, request)
