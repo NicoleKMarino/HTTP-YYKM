@@ -1,8 +1,12 @@
 require_relative "responder"
+require_relative "game"
 
 class Parser
 
+  attr_accessor :gameplay
+
   def initialize(server)
+    @gameplay = Game.new
     @request_total = 0
     loop {receive_request(server)}
   end
@@ -15,7 +19,6 @@ class Parser
       request_lines << line.chomp
     end
     Responder.new(server, client, request_lines, @request_total)
-    # send_response(server, client, request_lines)
   end
 
 end

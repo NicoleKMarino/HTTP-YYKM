@@ -1,7 +1,5 @@
 require "socket"
 require_relative "word_search"
-require_relative "game"
-require "pry"
 
 class Responder
 
@@ -31,13 +29,19 @@ class Responder
   end
 
   def check_request_path(server, client, request)
+
+    ### can use hash to point toward response based on ifhash[xxx]
+    # use request[1].slice(0, 12) as input for hash keys
+    # must pull out
+    direction_hash = {"/hello" => "Hello, World! (#{@request_total})",
+                      "/datetime" => "#{Time.now.strftime('%a,%e %b %Y %H:%M:%S')}", "/word_search" => WordSearch.new.word_search(request[1].partition('=').last), "/shutdown" => shutdown(server, client, request),  "
     @request_total += 1
-    if request[1] == "/hello"
-      response = "Hello, World! (#{@request_total})"
-    elsif request[1] == "/datetime"
-      response = "#{Time.now.strftime('%a,%e %b %Y %H:%M:%S')}"
-    elsif request[1].include?("/word_search")
-      word = request[1].partition('=').last
+    # if request[1] == "/hello"
+    #   response = "Hello, World! (#{@request_total})"
+    # elsif request[1] == "/datetime"
+    #   response = "#{Time.now.strftime('%a,%e %b %Y %H:%M:%S')}"
+    # elsif request[1].include?("/word_search")
+    #   word = request[1].partition('=').last
       response = WordSearch.new.word_search(word)
     elsif request[1] == "/shutdown"
       shutdown(server, client, request)
