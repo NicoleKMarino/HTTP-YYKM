@@ -31,54 +31,67 @@ class Responder
       "server: ruby",
       "content-type: text/html; charset=iso-8859-1",
       "content-length: #{html_body_message(message).length}\r\n\r\n"].join("\r\n")
-  end
-
-  def check_request_path(server, client, request, active_game)
-    @request_total += 1
-    if request[1] == "/hello"
-      response = "Hello, World! (#{@request_total})"
-    elsif request[1] == "/datetime"
-      response = "#{Time.now.strftime('%a,%e %b %Y %H:%M:%S')}"
-    elsif request[1].include?("/word_search")
-      word = request[1].partition('=').last
-      response = WordSearch.new.word_search(word)
-      ############
-    elsif request[1].include?("start_game")
-      response = "Good luck!"
-    elsif request[1].include?("game")
-      @gameplay.find_guess(client, @request_lines)
-      response = @gameplay.most_recent_guess_result
-    elsif request[1] == "/shutdown"
-      shutdown(server, client, request)
-    elsif request[1] == "/"
-      response = ""
-    else
-      @status = "404 not found"
-      response = ""
     end
-    return response + print_request_details(server, request)
-  end
 
-  def print_request_details(server, request)
-    ip = Socket.ip_address_list[1].ip_address
-    host = Socket.gethostname
-    port = server.addr[1]
-    "<pre>" +
-    "Verb: #{request[0]}
-    Path: #{request[1]}
-    Protocol: #{request[2]}
-    Host: #{host} #{ip}
-    Port: #{port}
-    Origin:#{ip}
-    Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" + "</prev"
-  end
+    def check_request_path(server, client, request, active_game)
+      @request_total += 1
+      if request[1] == "/hello"
+        response = "Hello, World! (#{@request_total})"
+      elsif request[1] == "/datetime"
+        response = "#{Time.now.strftime('%a,%e %b %Y %H:%M:%S')}"
+      elsif request[1].include?("/word_search")
+        word = request[1].partition('=').last
+        response = WordSearch.new.word_search(word)
+      elsif request[1].include?("start_game")
+          if @gameplay.game_active == false
+            @status = "302 Redirect"
+            response = "Good luck!"
+          elsif @gameplay.game_active == true
+            @status = "403 Forbidden"
+            response = "You already have a game active"
+          else
+            response == ""
+          end
+      elsif request[1].include?("game") && request[0] == "GET"
+        response =  "#{@gameplay.guess_count} guesses have been taken " +
+        "\nThe last guess was #{@gameplay.most_recent_guess}, #{@gameplay.most_recent_guess_result}"
+      elsif request[1].include?("game") && request[0] == "POST"
+        @gameplay.find_guess(client, @request_lines)
+        response = @gameplay.most_recent_guess_result
+      elsif request[1] == "/shutdown"
+        shutdown(server, client, request)
+      elsif request[1] == "/system_error"
+        @status="500 Internal Server Error"
+        response = raise.SystemStackError
+      elsif request[1] == "/"
+        response = ""
+      else
+        @status = "404 not found"
+        response = ""
+      end
+      return response + print_request_details(server, request)
+    end
 
-  def shutdown(server, client, request)
-    response = "Total Requests:#{@request_total}"
-    client.puts html_headers(response + print_request_details(server, request))
-    client.puts html_body_message(response + print_request_details(server, request))
-    client.close
-    server.close
-  end
+    def print_request_details(server, request)
+      ip = Socket.ip_address_list[1].ip_address
+      host = Socket.gethostname
+      port = server.addr[1]
+      "<pre>" +
+      "Verb: #{request[0]}
+      Path: #{request[1]}
+      Protocol: #{request[2]}
+      Host: #{host} #{ip}
+      Port: #{port}
+      Origin:#{ip}
+      Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" + "</prev"
+    end
 
-end
+    def shutdown(server, client, request)
+      response = "Total Requests:#{@request_total}"
+      client.puts html_headers(response + print_request_details(server, request))
+      client.puts html_body_message(response + print_request_details(server, request))
+      client.close
+      server.close
+    end
+
+  end
