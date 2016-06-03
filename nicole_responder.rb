@@ -1,14 +1,9 @@
 require "socket"
 require_relative "word_search"
 require_relative "game"
-require_relative "html_formatting"
-require_relative "game_handler"
 require "pry"
 
 class Responder
-
-  include HTMLFormatting
-  include GameHandler
 
   def initialize(server, client, request_lines, request_total, active_game)
     @request_lines = request_lines
@@ -26,6 +21,18 @@ class Responder
     client.close
   end
 
+  def html_body_message(message)
+    output = "<html><head></head><body>#{message}</body></html>"
+  end
+
+  def html_headers(message)
+    headers = ["http/1.1 #{@status}",
+      "date: #{Time.now.strftime('%a, %e %b %Y %H:%M:%S %z')}",
+      "server: ruby",
+      "content-type: text/html; charset=iso-8859-1",
+      "content-length: #{html_body_message(message).length}\r\n\r\n"].join("\r\n")
+  end
+
   def check_request_path(server, client, request, active_game)
     @request_total += 1
     if request[1] == "/hello"
@@ -35,15 +42,16 @@ class Responder
     elsif request[1].include?("/word_search")
       word = request[1].partition('=').last
       response = WordSearch.new.word_search(word)
+      ############
+    elsif request[1].include?("start_game")
+      response = "Good luck!"
     elsif request[1].include?("game")
-      response = game_response_paths(request, client)
+      @gameplay.find_guess(client, @request_lines)
+      response = @gameplay.most_recent_guess_result
     elsif request[1] == "/shutdown"
       shutdown(server, client, request)
     elsif request[1] == "/"
       response = ""
-    elsif request[1] == "/force_error"
-      @status = "500 Internal Server Error"
-      response = "500 - Internal System Error"
     else
       @status = "404 not found"
       response = "404 not found"
