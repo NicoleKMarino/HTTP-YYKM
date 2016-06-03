@@ -1,9 +1,14 @@
 require "socket"
 require_relative "word_search"
 require_relative "game"
+require_relative "html_formatting"
+require_relative "game_handler"
 require "pry"
 
 class Responder
+
+  include HTMLFormatting
+  include GameHandler
 
   def initialize(server, client, request_lines, request_total, active_game)
     @request_lines = request_lines
@@ -20,20 +25,7 @@ class Responder
     client.close
   end
 
-  def html_body_message(message)
-    output = "<html><head></head><body>#{message}</body></html>"
-  end
-
-  def html_headers(message)
-    headers = ["http/1.1 200 ok",
-      "date: #{Time.now.strftime('%a, %e %b %Y %H:%M:%S %z')}",
-      "server: ruby",
-      "content-type: text/html; charset=iso-8859-1",
-      "content-length: #{html_body_message(message).length}\r\n\r\n"].join("\r\n")
-  end
-
   def check_request_path(server, client, request, active_game)
-    binding.pry
     @request_total += 1
     if request[1] == "/hello"
       response = "Hello, World! (#{@request_total})"
@@ -42,15 +34,8 @@ class Responder
     elsif request[1].include?("/word_search")
       word = request[1].partition('=').last
       response = WordSearch.new.word_search(word)
-      ############
-    elsif request[1].include?("start_game")
-      response = "Good luck!"
-    elsif request[1].include?("game") && request[0] == "GET"
-      response =  "#{@gameplay.guess_count} guesses have been taken " +
-                  "\nThe last guess was #{@gameplay.most_recent_guess}, #{@gameplay.most_recent_guess_result}"
-    elsif request[1].include?("game") && request[0] == "POST"
-      @gameplay.find_guess(client, @request_lines)
-      response = @gameplay.most_recent_guess_result
+    elsif request[1].include?("game")
+      response = game_response_paths(request, client)
     elsif request[1] == "/shutdown"
       shutdown(server, client, request)
     else
