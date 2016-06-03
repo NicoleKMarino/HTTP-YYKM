@@ -1,7 +1,6 @@
 require "minitest/autorun"
 require "minitest/pride"
 require "./lib/game.rb"
-require "pry"
 
 class GameTest < Minitest::Test
   def test_game_generates_random_number

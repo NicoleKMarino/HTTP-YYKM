@@ -3,7 +3,6 @@ require_relative "word_search"
 require_relative "game"
 require_relative "html_formatting"
 require_relative "game_handler"
-require "pry"
 
 class Responder
 
@@ -69,7 +68,6 @@ class Responder
     response = "Total Requests:#{@request_total}"
     client.puts html_headers(response + print_request_details(server, request))
     client.puts html_body_message(response + print_request_details(server, request))
-    client.close
     server.close
   end
 

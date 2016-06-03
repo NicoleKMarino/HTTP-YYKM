@@ -12,5 +12,6 @@ class ParserTest < Minitest::Test
     assert response.body.include? "Port:"
     assert response.body.include? "Origin:"
     assert response.body.include? "Accept:"
+    assert_equal 200, response.status
   end
 end

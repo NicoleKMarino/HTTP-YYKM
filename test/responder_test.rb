@@ -56,6 +56,5 @@ class ResponderTest < Minitest::Test
     response = Faraday.get("http://localhost:9292/force_error")
     assert response.body.include? "500"
     assert_equal 500, response.status
-    binding.pry
   end
 end
